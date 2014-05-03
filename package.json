@@ -1,0 +1,29 @@
+{
+  "name": "assetylene",
+  "version": "0.0.0",
+  "description": "Asset manager",
+  "main": "assetylene.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/download13/assetylene.git"
+  },
+  "keywords": [
+    "asset",
+    "assets",
+    "manager",
+    "management",
+    "middleware"
+  ],
+  "author": "Erin Dachtler <download333@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/download13/assetylene/issues"
+  },
+  "homepage": "https://github.com/download13/assetylene",
+  "dependencies": {
+    "readdir-r": "0.0.0"
+  }
+}
