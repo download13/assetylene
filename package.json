@@ -24,6 +24,14 @@
   },
   "homepage": "https://github.com/download13/assetylene",
   "dependencies": {
-    "readdir-r": "0.0.0"
+    "async": "^0.8.0",
+    "clean-css": "^2.1.8",
+    "mime": "^1.2.11",
+    "readdir-r": "0.0.0",
+    "uglify-js": "^2.4.13"
+  },
+  "devDependencies": {
+    "mocha": "^1.18.2",
+    "supertest": "^0.12.0"
   }
 }

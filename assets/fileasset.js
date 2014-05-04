@@ -1,4 +1,5 @@
 var fs = require('fs');
+var path = require('path');
 var createAsset = require('./asset');
 
 /*
@@ -8,7 +9,10 @@ function createFileAsset(opts, cb) {
 	opts.name = path.basename(opts.filename);
 
 	fs.readFile(opts.filename, function(err, data) {
-		if(err) throw err;
+		if(err) {
+			cb(err);
+			return;
+		}
 
 		opts.content = data;
 
@@ -16,4 +20,4 @@ function createFileAsset(opts, cb) {
 	}.bind(this));
 }
 
-module.exports = FileAsset;
+module.exports = createFileAsset;

@@ -1,8 +1,17 @@
 var url = require('url');
+var path = require('path');
+
+var createAsset = require('./assets/asset');
+var createFileAsset = require('./assets/fileasset');
+var createDirectoryAssets = require('./assets/assetdir');
+var createJSAsset = require('./assets/jsasset');
+var createCSSAsset = require('./assets/cssasset');
 
 function Manager() {
 	this.byUrl = {};
 	this.byName = {};
+
+	this._handleAssets = this._handleAssets.bind(this);
 
 	this.serve = this.serve.bind(this);
 	this.serve.add = this.add.bind(this);
@@ -11,7 +20,7 @@ function Manager() {
 
 Manager.prototype.serve = function(req, res, next) {
 	var method = req.method;
-	var path = url.parse(req.url).pathname;
+	var urlpath = url.parse(req.url).pathname;
 	var headers = req.headers;
 
 	// Only allow GET and HEAD requests
@@ -32,7 +41,7 @@ Manager.prototype.serve = function(req, res, next) {
 	}
 
 	// Get the asset
-	var asset = this.byUrl[path];
+	var asset = this.byUrl[urlpath];
 	if(asset == null) {
 		if(next) next();
 		else {
@@ -53,7 +62,7 @@ Manager.prototype.serve = function(req, res, next) {
 	// Should we use gzipped content?
 	var useGzip = false;
 	var enc = headers['accept-encoding'];
-	if(this.gzipContent && enc != null && enc.indexOf('gzip') !== -1) {
+	if(asset.gzipContent && enc != null && enc.indexOf('gzip') !== -1) {
 		useGzip = true;
 	}
 
@@ -65,20 +74,36 @@ Manager.prototype.serve = function(req, res, next) {
 }
 
 Manager.prototype.add = function(opts) {
-	if(opts.content) {
+	if(opts.buildContent) {
+		this._handleAssets(null, opts);
+	} else if(opts.content) {
 		createAsset(opts, this._handleAssets);
 	} else if(opts.filename) {
 		createFileAsset(opts, this._handleAssets);
 	} else if(opts.directory) {
 		createDirectoryAssets(opts, this._handleAssets);
+	} else if(opts.files) {
+		var type = path.extname(opts.files[0]);
+		if(type === '.js') {
+			createJSAsset(opts, this._handleAssets);
+		} else if(type === '.css') {
+			createCSSAsset(opts, this._handleAssets);
+		}
 	}
 }
 
 Manager.prototype.url = function(name) {
-	return this.byName[name].url;
+	var asset = this.byName[name];
+	if(asset == null) {
+		return null;
+	}
+
+	return asset.url;
 }
 
-Manager.prototype._handleAssets = function(assets) {
+Manager.prototype._handleAssets = function(err, assets) {
+	if(err) throw err;
+
 	if(!Array.isArray(assets)) {
 		assets = [assets];
 	}
