@@ -15,7 +15,8 @@ function createDirectoryAssets(opts, cb) {
 
 		async.map(list, function(item, cb) {
 			createFileAsset({
-				filename: path.join(opts.directory, item)
+				filename: path.join(opts.directory, item),
+				prefix: opts.prefix
 			}, cb);
 		}, cb);
 	});

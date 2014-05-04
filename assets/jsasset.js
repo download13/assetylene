@@ -4,7 +4,6 @@ var UglifyJS = require('uglify-js');
 var createAsset = require('./asset');
 
 /*
-name - name required
 files - array of filenames
 */
 function createJSAsset(opts, cb) {
