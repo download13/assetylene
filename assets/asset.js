@@ -16,7 +16,7 @@ function Asset(opts) {
 	this.ext = path.extname(this.name);
 	this.name = path.basename(this.name, this.ext);
 
-	this.cacheAge = opts.cache || 600; // Default to caching for ten minutes
+	this.cacheAge = opts.cache || 3600; // Default to caching for an hour
 
 	this.type = opts.type || mime.lookup(this.ext);
 

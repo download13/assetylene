@@ -18,6 +18,8 @@ function Manager() {
 	this.serve.url = this.url.bind(this);
 }
 
+require('util').inherits(Manager, require('events').EventEmitter);
+
 Manager.prototype.serve = function(req, res, next) {
 	var method = req.method;
 	var urlpath = url.parse(req.url).pathname;
@@ -93,6 +95,8 @@ Manager.prototype.serve = function(req, res, next) {
 }
 
 Manager.prototype.add = function(opts) {
+	this._pending++;
+
 	if(opts.buildContent) {
 		this._handleAssets(null, opts);
 	} else if(opts.content) {
@@ -132,6 +136,10 @@ Manager.prototype._handleAssets = function(err, assets) {
 		this.byUrl[asset.url] = asset;
 		this.byUrl[asset.hashUrl] = asset;
 	}, this);
+
+	if(--this._pending === 0) {
+		this.emit('ready');
+	}
 }
 
 module.exports = Manager;
