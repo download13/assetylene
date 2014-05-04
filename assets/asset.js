@@ -16,6 +16,8 @@ function Asset(opts) {
 	this.ext = path.extname(this.name);
 	this.name = path.basename(this.name, this.ext);
 
+	this.cacheAge = opts.cache || 600; // Default to caching for ten minutes
+
 	this.type = opts.type || mime.lookup(this.ext);
 
 	this.buildContent(opts.content, this.emit.bind(this, 'ready'));
@@ -32,13 +34,17 @@ Asset.prototype.buildContent = function(content, cb) {
 
 	this.etag = crypto.createHash('md5').update(content).digest('hex');
 
-	this.url = url.resolve(this.prefix, this.name + '-' + this.etag + this.ext);
+	this.url = url.resolve(this.prefix, this.name + this.ext);
+	this.hashUrl = url.resolve(this.prefix, this.name + '-' + this.etag + this.ext);
 	this.name += this.ext;
 
 	zlib.gzip(content, function(err, zipped) {
 		if(zipped.length < (content.length * 0.95)) {
 			this.gzipContent = zipped;
 		}
+
+		this.modified = Date.now();
+
 		cb(err);
 	}.bind(this));
 }

@@ -21,7 +21,6 @@ function Manager() {
 Manager.prototype.serve = function(req, res, next) {
 	var method = req.method;
 	var urlpath = url.parse(req.url).pathname;
-	var headers = req.headers;
 
 	// Only allow GET and HEAD requests
 	if(method !== 'GET' && method !== 'HEAD') {
@@ -33,12 +32,14 @@ Manager.prototype.serve = function(req, res, next) {
 		return;
 	}
 
+	var modSince = req.headers['if-modified-since'];
+	var noneMatch = req.headers['if-none-match'];
+	var acceptEncoding = req.headers['accept-encoding'];
+
+	var cacheControl;
+
 	// We cache files forever, so just assume it's got the latest version
-	if(headers['if-modified-since'] != null) {
-		res.writeHead(304);
-		res.end();
-		return;
-	}
+	
 
 	// Get the asset
 	var asset = this.byUrl[urlpath];
@@ -51,22 +52,40 @@ Manager.prototype.serve = function(req, res, next) {
 		return;
 	}
 
-	// Make sure it's the same one, just in case
-	var none = headers['if-none-match'];
-	if(none != null && none === asset.etag) {
-		res.writeHead(304);
-		res.end();
-		return;
+	// Unique file, caching is permanent
+	if(urlpath === asset.hashUrl) {
+		// File content never changes, assume cache is fresh
+		if(modSince != null || noneMatch != null) {
+			res.writeHead(304);
+			res.end();
+			return;
+		}
+
+		cacheControl = 'public, max-age=31536000';
+	} else {
+		if(modSince != null && asset.modified <= new Date(modSince).getTime()) {
+			res.writeHead(304);
+			res.end();
+			return;
+		}
+
+		// Make sure it's the same file
+		if(noneMatch != null && noneMatch === asset.etag) {
+			res.writeHead(304);
+			res.end();
+			return;
+		}
+
+		cacheControl = 'public, max-age=' + asset.cacheAge;
 	}
 
 	// Should we use gzipped content?
 	var useGzip = false;
-	var enc = headers['accept-encoding'];
-	if(asset.gzipContent && enc != null && enc.indexOf('gzip') !== -1) {
+	if(asset.gzipContent && acceptEncoding != null && acceptEncoding.indexOf('gzip') !== -1) {
 		useGzip = true;
 	}
 
-	var headers = getHeaders(asset, useGzip);
+	var headers = getHeaders(asset, useGzip, cacheControl);
 	var content = getContent(req, asset, useGzip);
 
 	res.writeHead(200, headers);
@@ -98,7 +117,7 @@ Manager.prototype.url = function(name) {
 		return null;
 	}
 
-	return asset.url;
+	return asset.hashUrl;
 }
 
 Manager.prototype._handleAssets = function(err, assets) {
@@ -111,16 +130,17 @@ Manager.prototype._handleAssets = function(err, assets) {
 	assets.forEach(function(asset) {
 		this.byName[asset.name] = asset;
 		this.byUrl[asset.url] = asset;
+		this.byUrl[asset.hashUrl] = asset;
 	}, this);
 }
 
 module.exports = Manager;
 
 
-function getHeaders(asset, useGzip) {
+function getHeaders(asset, useGzip, cacheControl) {
 	var h = {
 		'Vary': 'Accept-Encoding',
-		'Cache-Control': 'public, max-age=31536000',
+		'Cache-Control': cacheControl,
 		'Content-Type': asset.type,
 		'ETag': asset.etag
 	};

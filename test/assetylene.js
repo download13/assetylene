@@ -29,13 +29,12 @@ describe('assetylene', function() {
 		s.add({directory: 'test/testdata/dir2', prefix: '/dir2/'});
 		// Absolute directory
 		s.add({directory: join(__dirname, 'testdata/absdir')});
-		// TODO: Add tests for absolute file and dir locations
-		// Add test for prefix with dir
-		// Prefix with js/css
+
+		// TODO:
 		// add test for files with non-hash urls
 		// Cache test non hashes
 
-		setTimeout(done, 500);
+		setTimeout(done, 1500);
 	});
 
 	describe('.url', function() {
@@ -54,7 +53,7 @@ describe('assetylene', function() {
 	});
 
 	describe('.FileAsset', function() {
-		it('should get a root file', function(done) {
+		it('serves a root file', function(done) {
 			r(s).get(s.url('robots.txt'))
 				.expect('Vary', 'Accept-Encoding')
 				.expect('Cache-Control', 'public, max-age=31536000')
@@ -62,38 +61,43 @@ describe('assetylene', function() {
 				.expect(200, 'wutwutwutwutwutwutwutwutwutwut\n', done);
 		});
 
-		it('should get a compressed file', function(done) {
+		it('serves a compressed file', function(done) {
 			r(s).get(s.url('robots.txt'))
 				.set('Accept-Encoding', 'gzip, deflate')
 				.expect('Content-Encoding', 'gzip')
 				.expect(200, 'wutwutwutwutwutwutwutwutwutwut\n', done);
 		});
 
-		it('should get a prefixed file', function(done) {
+		it('serves a prefixed file', function(done) {
 			r(s).get(s.url('wut.txt'))
 				.expect(200, 'tgf\n', done);
 		});
 
-		it('gets an absolute file', function(done) {
+		it('serves an absolute file', function(done) {
 			r(s).get(s.url('abs.txt'))
 				.expect(200, 'abs\n', done);
 		});
 
-		it('should get only headers from HEAD', function(done) {
+		it('sends only headers from HEAD', function(done) {
 			r(s).head(s.url('wut.txt'))
 				.expect(200, '', done);
+		});
+
+		it('serves a non-hash file', function(done) {
+			r(s).get('/public/wut.txt')
+				.expect(200, 'tgf\n', done);
 		});
 	});
 
 	describe('.JSAsset', function() {
-		it('should get minified js', function(done) {
+		it('serves minified js', function(done) {
 			r(s).get(s.url('script.js'))
 				.expect(200, 'function v(){var t=3;test=t}var test=1;', done);
 		});
 	});
 
 	describe('.CSSAsset', function() {
-		it('should get minified css', function(done) {
+		it('serves minified css', function(done) {
 			r(s).get(s.url('style.css'))
 				.expect(200, 'body{color:#f44}*{font-family:sans-serif}', done);
 		});
@@ -134,22 +138,56 @@ describe('assetylene', function() {
 	});
 
 	describe('cache handling', function() {
-		it('sends 304 on modified since', function(done) {
-			r(s).get(s.url('wut.txt'))
-				.set('If-Modified-Since', new Date().toGMTString())
-				.expect(304, '', done);
-		});
+		describe('hashed files', function() {
+			it('sends 304 on modified since', function(done) {
+				r(s).get(s.url('wut.txt'))
+					.set('If-Modified-Since', new Date().toGMTString())
+					.expect(304, '', done);
+			});
 
-		it('sends 200 on wrong etag', function(done) {
-			r(s).get(s.url('wut.txt'))
-				.set('Etag', 'fadskjfksdhf')
-				.expect(200, 'tgf\n', done);
-		});
+			it('sends 304 on invalid modified since', function(done) {
+				r(s).get(s.url('wut.txt'))
+					.set('If-Modified-Since', 'uiyukhjvbhjdsf')
+					.expect(304, '', done);
+			});
 
-		it('sends 304 on matching etag', function(done) {
-			r(s).get(s.url('wut.txt'))
-				.set('If-None-Match', 'a0bdc0989c1bc942627c40d7b3eeca53')
-				.expect(304, '', done);
+			it('sends 304 on matching etag', function(done) {
+				r(s).get(s.url('wut.txt'))
+					.set('If-None-Match', 'a0bdc0989c1bc942627c40d7b3eeca53')
+					.expect(304, '', done);
+			});
+
+			it('sends 304 on invalid etag', function(done) {
+				r(s).get(s.url('wut.txt'))
+					.set('If-None-Match', 'fadskjfksdhf')
+					.expect(304, '', done);
+			});
+		});
+		
+		describe('non-hashed files', function() {
+			it('sends 304 on modified since', function(done) {
+				r(s).get('/public/wut.txt')
+					.set('If-Modified-Since', new Date().toGMTString())
+					.expect(304, '', done);
+			});
+
+			it('sends 200 on invalid modified since', function(done) {
+				r(s).get('/public/wut.txt')
+					.set('If-Modified-Since', 'uiyukhjvbhjdsf')
+					.expect(200, 'tgf\n', done);
+			});
+
+			it('sends 304 on matching etag', function(done) {
+				r(s).get('/public/wut.txt')
+					.set('If-None-Match', 'a0bdc0989c1bc942627c40d7b3eeca53')
+					.expect(304, '', done);
+			});
+
+			it('sends 200 on wrong etag', function(done) {
+				r(s).get('/public/wut.txt')
+					.set('If-None-Match', 'fadskjfksdhf')
+					.expect(200, 'tgf\n', done);
+			});
 		});
 	});
 
