@@ -8,6 +8,8 @@ var createJSAsset = require('./assets/jsasset');
 var createCSSAsset = require('./assets/cssasset');
 
 function Manager() {
+	this._pending = 0;
+	
 	this.byUrl = {};
 	this.byName = {};
 
@@ -16,6 +18,7 @@ function Manager() {
 	this.serve = this.serve.bind(this);
 	this.serve.add = this.add.bind(this);
 	this.serve.url = this.url.bind(this);
+	this.serve.on = this.on.bind(this);
 }
 
 require('util').inherits(Manager, require('events').EventEmitter);

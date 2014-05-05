@@ -30,11 +30,7 @@ describe('assetylene', function() {
 		// Absolute directory
 		s.add({directory: join(__dirname, 'testdata/absdir')});
 
-		// TODO:
-		// add test for files with non-hash urls
-		// Cache test non hashes
-
-		setTimeout(done, 1500);
+		s.on('ready', done);
 	});
 
 	describe('.url', function() {
@@ -167,7 +163,7 @@ describe('assetylene', function() {
 		describe('non-hashed files', function() {
 			it('sends 304 on modified since', function(done) {
 				r(s).get('/public/wut.txt')
-					.set('If-Modified-Since', new Date().toGMTString())
+					.set('If-Modified-Since', new Date(Date.now() + 5000).toGMTString())
 					.expect(304, '', done);
 			});
 
