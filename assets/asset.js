@@ -32,7 +32,7 @@ Asset.prototype.buildContent = function(content, cb) {
 
 	this.content = content;
 
-	this.etag = crypto.createHash('md5').update(content).digest('hex');
+	this.etag = crypto.createHash('md5').update(content).digest('hex').substr(0, 16);
 
 	this.url = url.resolve(this.prefix, this.name + this.ext);
 	this.hashUrl = url.resolve(this.prefix, this.name + '-' + this.etag + this.ext);

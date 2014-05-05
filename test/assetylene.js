@@ -36,11 +36,11 @@ describe('assetylene', function() {
 	describe('.url', function() {
 		it('should get hash url from name', function() {
 			var h = s.url('wut.txt');
-			assert.equal(h, '/public/wut-a0bdc0989c1bc942627c40d7b3eeca53.txt');
+			assert.equal(h, '/public/wut-a0bdc0989c1bc942.txt');
 		});
 
 		it('gets a prefixed minification', function() {
-			assert.equal(s.url('style.css'), '/css/style-4fe4f5aabd9887b289560594f68f9d57.css');
+			assert.equal(s.url('style.css'), '/css/style-4fe4f5aabd9887b2.css');
 		});
 
 		it('should get null from invalid name', function() {
@@ -149,7 +149,7 @@ describe('assetylene', function() {
 
 			it('sends 304 on matching etag', function(done) {
 				r(s).get(s.url('wut.txt'))
-					.set('If-None-Match', 'a0bdc0989c1bc942627c40d7b3eeca53')
+					.set('If-None-Match', 'a0bdc0989c1bc942')
 					.expect(304, '', done);
 			});
 
@@ -175,7 +175,7 @@ describe('assetylene', function() {
 
 			it('sends 304 on matching etag', function(done) {
 				r(s).get('/public/wut.txt')
-					.set('If-None-Match', 'a0bdc0989c1bc942627c40d7b3eeca53')
+					.set('If-None-Match', 'a0bdc0989c1bc942')
 					.expect(304, '', done);
 			});
 
